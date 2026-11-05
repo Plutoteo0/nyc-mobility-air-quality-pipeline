@@ -19,4 +19,3 @@ fact_taxi_daily = df.groupBy(F.col("pickup_date"), F.col("PULocationID")).agg(
 fact_taxi_daily.agg(F.sum("trip_count")).show()
 
 fact_taxi_daily.write.format("delta").mode("overwrite").save("gold/fact_taxi_daily")
-print(spark.read.format("delta").load("gold/fact_taxi_daily").count())

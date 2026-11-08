@@ -1,17 +1,18 @@
 from pyspark.sql import functions as F
 from spark_utils import get_spark
+from config import TAXI_START, TAXI_END, QUANTILE, QUANTILE_ERROR, table_path, BRONZE
 
 spark = get_spark("silver_taxi")
 
-df = spark.read.parquet("./bronze/yellow_tripdata_2026-09.parquet")
+df = spark.read.parquet(BRONZE["taxi"])
 
-df = df.filter(~((F.col("tpep_pickup_datetime") < "2026-09-01") | (F.col("tpep_pickup_datetime") >= "2026-10-01")))
+df = df.filter(~((F.col("tpep_pickup_datetime") < TAXI_START) | (F.col("tpep_pickup_datetime") >= TAXI_END)))
 
 df = df.withColumn("duration_min", F.timestamp_diff("SECOND", F.column("tpep_pickup_datetime"), F.column("tpep_dropoff_datetime")) / 60)
 
 df = df.filter((F.col("total_amount") > 0) & (F.col("duration_min") > 0))
 
-q = df.approxQuantile(["total_amount", "duration_min"], [0.999], 0.0001)
+q = df.approxQuantile(["total_amount", "duration_min"], [QUANTILE], QUANTILE_ERROR)
 amount_cap = q[0][0]
 duration_cap = q[1][0]
 
@@ -33,5 +34,5 @@ silver_cols = [
 
 df = df.select(*silver_cols)
 
-df.write.format("delta").mode("overwrite").save("silver/taxi")
-print(spark.read.format("delta").load("silver/taxi").count())
+df.write.format("delta").mode("overwrite").save(table_path("silver", "taxi"))
+print(spark.read.format("delta").load(table_path("silver", "taxi")).count())

@@ -1,9 +1,10 @@
 from pyspark.sql import functions as F
 from spark_utils import get_spark
+from config import table_path
 
 spark = get_spark("gold_taxi")
 
-df = spark.read.format("delta").load("silver/taxi")
+df = spark.read.format("delta").load(table_path("silver", "taxi"))
 
 fact_taxi_daily = df.groupBy(F.col("pickup_date"), F.col("PULocationID")).agg(
     F.count(F.col("PULocationID")).alias("trip_count"),
@@ -18,4 +19,4 @@ fact_taxi_daily = df.groupBy(F.col("pickup_date"), F.col("PULocationID")).agg(
 
 fact_taxi_daily.agg(F.sum("trip_count")).show()
 
-fact_taxi_daily.write.format("delta").mode("overwrite").save("gold/fact_taxi_daily")
+fact_taxi_daily.write.format("delta").mode("overwrite").save(table_path("gold", "fact_taxi_daily"))

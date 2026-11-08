@@ -1,6 +1,9 @@
 from pyspark.sql import SparkSession
 from delta import configure_spark_with_delta_pip
+import os, sys
 
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 def get_spark(app_name="taxi"):
     builder = SparkSession.builder \

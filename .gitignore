@@ -12,6 +12,7 @@ silver/
 gold/
 *.parquet
 *.csv
+!reference/*.csv
 
 spark-warehouse/
 metastore_db/

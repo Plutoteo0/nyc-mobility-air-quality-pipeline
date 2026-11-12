@@ -1,6 +1,6 @@
 import pandas as pd
 
-file = "./yellow_tripdata_2026-09.parquet"
+file = "./bronze/yellow_tripdata_2026-09.parquet"
 data = pd.read_parquet(file)
 
 print(data.dtypes)
@@ -27,3 +27,7 @@ print(bad.sum())
 
 print(data[mask_trip_distance][["total_amount","duration_min"]].describe())
 print(data[["total_amount","duration_min"]].quantile([0.99, 0.999, 1.0]))
+
+print(data[mask_total_amount]['payment_type'].value_counts())
+print(data[mask_trip_duration]["trip_distance"].describe())
+print(data[mask_trip_duration]["total_amount"].describe())

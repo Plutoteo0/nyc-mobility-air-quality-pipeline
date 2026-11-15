@@ -19,6 +19,9 @@ BRONZE = {
     "openaq_days": "bronze/openaq_days_*.json",
 }
 
+TAXI_PATH = "bronze/taxi/yellow_tripdata_{ym}.parquet"
+TAXI_MONTHS = ["2024-01", "2024-07", "2025-01", "2026-09"]
+
 REFERENCE = {
     "sensors": "reference/openaq_sensors.csv",
     "zone_station_map": "reference/zone_station_map.csv",

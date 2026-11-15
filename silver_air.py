@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 from spark_utils import get_spark
-from config import BRONZE, LOW_COVERAGE_PCT, table_path
+from config import BRONZE, LOW_COVERAGE_PCT, table_path, REFERENCE
 
 spark = get_spark("silver_air")
 
@@ -24,10 +24,13 @@ table = table.withColumn("is_missing_value", F.col("value").isNull())
 table = table.withColumn("is_negative_value", F.coalesce(F.col("value") < 0, F.lit(False)))
 table = table.withColumn("is_low_coverage", F.col("percent_coverage") < LOW_COVERAGE_PCT)
 
+sensor_station = spark.read.option("header", True).option("inferSchema", True).csv(REFERENCE['sensors'])
+sensor_station = sensor_station[["sensor_id", "station_id"]]
+
+table = table.join(sensor_station, on="sensor_id", how="left")
 table.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(table_path("silver", "air_quality"))
 
 s = spark.read.format("delta").load(table_path("silver", "air_quality"))
-print("silver air:", s.count())
-print("missing:", s.filter("is_missing_value").count())
-print("negative:", s.filter("is_negative_value").count())
-print("low_coverage:", s.filter("is_low_coverage").count())
+print(s.count())                                   # 36907, не больше
+print(s.filter(F.col("station_id").isNull()).count())   # 0
+s.groupBy("station_id", "parameter").count().orderBy("station_id").show()   # 12 строк

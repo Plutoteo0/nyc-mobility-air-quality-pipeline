@@ -19,6 +19,11 @@ BRONZE = {
     "openaq_days": "bronze/openaq_days_*.json",
 }
 
+REFERENCE = {
+    "sensors": "reference/openaq_sensors.csv",
+    "zone_station_map": "reference/zone_station_map.csv",
+}
+
 def table_path(layer, name):
     if MODE == "local":
         return f"{layer}/{name}"

@@ -1,0 +1,398 @@
+{
+  "name": "pl_main",
+  "objectId": "3ee67a0a-8b2a-430d-9ff1-472577a5d8e5",
+  "properties": {
+    "activities": [
+      {
+        "name": "run_taxi_ingest",
+        "type": "InvokePipeline",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": "425f5c70-8516-4ab2-b74f-a2b8ed6c5ae5",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601",
+          "parameters": {
+            "months": [
+              "2024-01",
+              "2024-02",
+              "2024-03",
+              "2024-04",
+              "2024-05",
+              "2024-06",
+              "2024-07",
+              "2024-08",
+              "2024-09",
+              "2024-10",
+              "2024-11",
+              "2024-12",
+              "2025-01",
+              "2025-02",
+              "2025-03",
+              "2025-04",
+              "2025-05",
+              "2025-06",
+              "2025-07",
+              "2025-08",
+              "2025-09",
+              "2025-10",
+              "2025-11",
+              "2025-12",
+              "2026-01",
+              "2026-02",
+              "2026-03",
+              "2026-04",
+              "2026-05",
+              "2026-06",
+              "2026-07",
+              "2026-08",
+              "2026-09"
+            ]
+          }
+        },
+        "externalReferences": {
+          "connection": "49268e1c-812d-406e-b795-621f6c5d53e6"
+        }
+      },
+      {
+        "name": "run_df_ecb",
+        "type": "RefreshDataflow",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "dataflowId": "32949770-f4a4-480c-b6b0-bc76f838a0c6",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601",
+          "notifyOption": "NoNotification",
+          "dataflowType": "DataflowFabric",
+          "executeMashupQueriesOnly": true
+        }
+      },
+      {
+        "name": "run_df_wb",
+        "type": "RefreshDataflow",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "dataflowId": "3c9ed864-7dd0-419d-b4b5-3879a0a1af91",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601",
+          "notifyOption": "NoNotification",
+          "dataflowType": "DataflowFabric",
+          "executeMashupQueriesOnly": true
+        }
+      },
+      {
+        "name": "bronze_done",
+        "type": "Wait",
+        "dependsOn": [
+          {
+            "activity": "run_taxi_ingest",
+            "dependencyConditions": ["Succeeded"]
+          },
+          {
+            "activity": "run_df_ecb",
+            "dependencyConditions": ["Succeeded"]
+          },
+          {
+            "activity": "run_df_wb",
+            "dependencyConditions": ["Succeeded"]
+          },
+          {
+            "activity": "run_nb_bronze_air",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "waitTimeInSeconds": 1
+        }
+      },
+      {
+        "name": "run_nb_silver_taxi",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "bronze_done",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "e7c45a48-1ae7-4179-a1f5-5f6d4323ada5",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_silver_zone_map",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_silver_taxi",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "77c369ca-5900-4afc-858c-f0c510827912",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_silver_air",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_silver_zone_map",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "b96b12c2-f6ee-4a2d-ae3e-7a5190308bca",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_silver_fx",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_silver_air",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "f6973c4a-6cf0-47f9-b640-6d095a3d3c5f",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_silver_gdp",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_silver_fx",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "65c52a7c-55a2-4d65-af32-3b6d45b0f8e0",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_dim_date",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_silver_gdp",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "979aba90-423e-4d9a-9a34-5647e6197789",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_dim_fx",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_dim_date",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "d1abfe0d-6ae5-48e4-872b-e1985e45d67b",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_dim_gdp",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_dim_fx",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "72ccf3e2-80d7-4d00-ac28-ac64878e5708",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_dim_zone",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_dim_gdp",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "6cd0ae33-41ec-4968-b404-2932a1640ee1",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_nb_fact_air_quality_daily",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "run_nb_dim_zone",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "b6851aef-d318-463f-a577-23317b54dcd1",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      },
+      {
+        "name": "run_sql_fact_taxi_daily",
+        "type": "Script",
+        "dependsOn": [
+          {
+            "activity": "run_nb_fact_air_quality_daily",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "linkedService": {
+          "name": "wh_gold",
+          "properties": {
+            "annotations": [],
+            "type": "DataWarehouse",
+            "typeProperties": {
+              "endpoint": "wz4dwgjmbjlezdix6szuxc5a3y-bpnhsueyaxoeddnwbcoskzogae.datawarehouse.fabric.microsoft.com",
+              "artifactId": "db976a15-63e3-454a-aa5f-3d2b2bbc1c22",
+              "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+            }
+          }
+        },
+        "typeProperties": {
+          "scripts": [
+            {
+              "type": "NonQuery",
+              "text": {
+                "value": "DROP TABLE IF EXISTS dbo.fact_taxi_daily;\nCREATE TABLE dbo.fact_taxi_daily AS\nSELECT\n    pickup_date,\n    PULocationID,\n    COUNT(PULocationID) AS trip_count,\n    SUM(fare_amount) AS sum_fare_amount,\n    SUM(tip_amount) AS sum_tip_amount,\n    SUM(total_amount) AS sum_total_amount,\n    SUM(CAST(is_invalid_duration AS INT)) AS invalid_duration_trips,\n    SUM(CAST(is_non_positive_amount AS INT)) AS non_positive_amount_trips,\n    SUM(CAST(is_outlier_amount AS INT)) AS outlier_amount_trips,\n    SUM(CAST(is_outlier_duration AS INT)) AS outlier_duration_trips,\n    SUM(trip_distance) AS sum_trip_distance,\n    AVG(CASE is_zero_distance WHEN 0 THEN trip_distance END) AS avg_trip_distance,\n    AVG(CASE is_outlier_duration WHEN 0 THEN duration_min END) AS avg_duration_min,\n    AVG(CASE WHEN is_non_positive_amount = 0 AND is_outlier_amount = 0 THEN fare_amount END) AS avg_fare_amount,\n    SUM(CASE payment_type WHEN 4 THEN total_amount END) AS dispute_amount,\n    SUM(CASE WHEN payment_type = 4 THEN 1 ELSE 0 END) AS dispute_trips,\n    COUNT(CASE is_zero_distance WHEN 1 THEN is_zero_distance END) AS zero_distance_trips\nFROM lh_silver.dbo.taxi\nGROUP BY pickup_date, PULocationID;",
+                "type": "Expression"
+              }
+            }
+          ],
+          "scriptBlockExecutionTimeout": "02:00:00"
+        }
+      },
+      {
+        "name": "run_nb_bronze_air",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "a368c93f-b6ad-4457-b0b9-95324e519ddc",
+          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601"
+        }
+      }
+    ],
+    "lastModifiedByObjectId": "0403a1c8-89bf-4e75-b709-7683f5479b86",
+    "lastPublishTime": "2026-11-20T17:50:27Z"
+  }
+}

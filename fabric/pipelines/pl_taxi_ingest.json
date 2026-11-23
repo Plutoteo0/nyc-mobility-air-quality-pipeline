@@ -1,0 +1,140 @@
+{
+  "name": "pl_taxi_ingest",
+  "objectId": "425f5c70-8516-4ab2-b74f-a2b8ed6c5ae5",
+  "properties": {
+    "activities": [
+      {
+        "name": "ForEach1",
+        "type": "ForEach",
+        "dependsOn": [],
+        "typeProperties": {
+          "items": {
+            "value": "@pipeline().parameters.months",
+            "type": "Expression"
+          },
+          "batchCount": 4,
+          "activities": [
+            {
+              "name": "copy_taxi_month",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "typeProperties": {
+                "source": {
+                  "type": "BinarySource",
+                  "storeSettings": {
+                    "type": "HttpReadSettings",
+                    "requestMethod": "GET"
+                  },
+                  "formatSettings": {
+                    "type": "BinaryReadSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "HttpServerLocation",
+                        "relativeUrl": {
+                          "value": "trip-data/yellow_tripdata_@{item()}.parquet",
+                          "type": "Expression"
+                        }
+                      }
+                    },
+                    "externalReferences": {
+                      "connection": "cf566639-f717-4b3c-a7f8-47436d02b154"
+                    }
+                  }
+                },
+                "sink": {
+                  "type": "BinarySink",
+                  "storeSettings": {
+                    "type": "LakehouseWriteSettings"
+                  },
+                  "datasetSettings": {
+                    "annotations": [],
+                    "connectionSettings": {
+                      "name": "lh_bronze",
+                      "properties": {
+                        "annotations": [],
+                        "type": "Lakehouse",
+                        "typeProperties": {
+                          "workspaceId": "5079da0b-0598-41dc-8db6-089d2565c601",
+                          "artifactId": "e756c9c8-d59d-47fe-92dc-7e89bdb50c3a",
+                          "rootFolder": "Files"
+                        },
+                        "externalReferences": {
+                          "connection": "3db037a3-e718-4a3e-aec9-92aa92b38634"
+                        }
+                      }
+                    },
+                    "type": "Binary",
+                    "typeProperties": {
+                      "location": {
+                        "type": "LakehouseLocation",
+                        "fileName": {
+                          "value": "yellow_tripdata_@{item()}.parquet",
+                          "type": "Expression"
+                        },
+                        "folderPath": "taxi"
+                      }
+                    }
+                  }
+                },
+                "enableStaging": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "months": {
+        "type": "array",
+        "defaultValue": [
+          "2024-01",
+          "2024-02",
+          "2024-03",
+          "2024-04",
+          "2024-05",
+          "2024-06",
+          "2024-07",
+          "2024-08",
+          "2024-09",
+          "2024-10",
+          "2024-11",
+          "2024-12",
+          "2025-01",
+          "2025-02",
+          "2025-03",
+          "2025-04",
+          "2025-05",
+          "2025-06",
+          "2025-07",
+          "2025-08",
+          "2025-09",
+          "2025-10",
+          "2025-11",
+          "2025-12",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06",
+          "2026-07",
+          "2026-08",
+          "2026-09"
+        ]
+      }
+    },
+    "lastModifiedByObjectId": "0403a1c8-89bf-4e75-b709-7683f5479b86",
+    "lastPublishTime": "2026-11-19T16:37:17Z"
+  }
+}
